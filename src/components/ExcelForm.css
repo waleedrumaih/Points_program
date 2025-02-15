@@ -1,0 +1,175 @@
+/* src/components/ExcelForm.css */
+.form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .form-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .form-header h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    position: relative;
+  }
+  
+  .form-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right, #ee7752, #23a6d5);
+    border-radius: 5px;
+  }
+  
+  .form-header p {
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 10px;
+    color: #333;
+    font-weight: 600;
+  }
+  
+  .select-wrapper {
+    position: relative;
+  }
+  
+  .select-wrapper select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .select-wrapper select:focus {
+    outline: none;
+    border-color: #23a6d5;
+    box-shadow: 0 0 0 3px rgba(35, 166, 213, 0.2);
+  }
+  
+  .select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    left: 15px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #666;
+  }
+  
+  .button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .toggle-button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Noto Sans Arabic', sans-serif;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .toggle-button:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+  }
+  
+  .toggle-button.active {
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+  }
+  
+  .selected-options {
+    text-align: center;
+    margin-top: 15px;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  .submit-button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #007bff, #0069d9);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+  }
+  
+  .submit-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+  
+  .submit-button.loading {
+    background: #ffc107;
+    color: #212529;
+  }
+  
+  .error-box {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .error-icon {
+    margin-left: 10px;
+    font-size: 1.2em;
+  }
+  
+  @media (max-width: 600px) {
+    .form-container {
+      margin: 0 10px;
+      padding: 20px;
+    }
+  
+    .toggle-button {
+      flex-grow: 1;
+    }
+  }

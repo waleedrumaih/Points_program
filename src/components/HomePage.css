@@ -1,0 +1,121 @@
+/* src/components/HomePage.css */
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  perspective: 1000px;
+}
+
+.home-content {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 40px 60px;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  transform-style: preserve-3d;
+  transform: rotateX(10deg);
+  transition: all 0.5s ease;
+}
+
+.home-content:hover {
+  transform: rotateX(0deg) scale(1.02);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.home-content h1 {
+  color: #333;
+  margin-bottom: 40px;
+  font-size: 2rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.home-content h1::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(to right, #ee7752, #23a6d5);
+  border-radius: 5px;
+}
+
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: 600;
+  position: relative;
+  overflow: hidden;
+  color: white;
+  text-decoration: none;
+  border: none;
+  gap: 10px;
+}
+
+.home-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: all 0.5s ease;
+}
+
+.home-button:hover::before {
+  left: 100%;
+}
+
+.add-points-button {
+  background: linear-gradient(135deg, #28a745, #218838);
+}
+
+.total-points-button {
+  background: linear-gradient(135deg, #007bff, #0069d9);
+}
+
+.home-button-icon {
+  font-size: 1.5em;
+  margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+
+.home-button:hover .home-button-icon {
+  transform: rotate(360deg);
+}
+
+@media (max-width: 600px) {
+  .home-content {
+    padding: 30px 20px;
+    margin: 0 10px;
+  }
+
+  .home-buttons {
+    gap: 15px;
+  }
+
+  .home-button {
+    font-size: 0.9rem;
+  }
+}

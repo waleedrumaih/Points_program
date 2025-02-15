@@ -1,0 +1,249 @@
+/* src/components/TotalPointsPage.css */
+.total-points-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px;
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .points-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .points-header h1 {
+    color: #333;
+    font-size: 2rem;
+    position: relative;
+  }
+  
+  .points-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 100px;
+    height: 3px;
+    background: linear-gradient(to right, #ee7752, #23a6d5);
+    border-radius: 5px;
+  }
+  
+  .clear-points-btn {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+  }
+  
+  .clear-points-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(220, 53, 69, 0.4);
+  }
+  
+  .no-points-message {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 50px;
+    text-align: center;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .points-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .points-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .points-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .points-card-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2em;
+  }
+  
+  .total-points-badge {
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+  
+  .neighborhood-badge {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9em;
+  }
+  
+  .edit-points-btn {
+    background: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .edit-points-btn:hover {
+    background: rgba(0, 123, 255, 0.2);
+    color: #0056b3;
+  }
+  
+  .points-breakdown {
+    padding: 15px;
+  }
+  
+  .point-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+  }
+  
+  .point-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(5px);
+  }
+  
+  .point-name {
+    color: #495057;
+  }
+  
+  .point-count {
+    font-weight: bold;
+    color: #007bff;
+  }
+  
+  .point-edit-input {
+    width: 70px;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+  }
+  
+  .point-edit-input:focus {
+    outline: none;
+    border-color: #23a6d5;
+    box-shadow: 0 0 0 3px rgba(35, 166, 213, 0.2);
+  }
+  
+  .edit-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+    gap: 10px;
+  }
+  
+  .save-points-btn {
+    flex-grow: 1;
+    background: linear-gradient(135deg, #28a745, #218838);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .save-points-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  }
+  
+  .cancel-edit-btn {
+    flex-grow: 1;
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .cancel-edit-btn:hover {
+    background: #545b62;
+  }
+  
+  .total-summary {
+    margin-top: 30px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  }
+  
+  .summary-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+  
+  .summary-stats p {
+    margin: 0;
+    color: #495057;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    border-radius: 8px;
+  }
+  
+  @media (max-width: 768px) {
+    .points-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .summary-stats {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .summary-stats p {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+  }

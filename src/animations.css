@@ -1,0 +1,104 @@
+/* src/animations.css */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes cardHover {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes buttonPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  @keyframes slideIn {
+    from { 
+      opacity: 0; 
+      transform: translateX(50px);
+    }
+    to { 
+      opacity: 1; 
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes bounceIn {
+    0% { 
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% { 
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    70% { 
+      transform: scale(0.9);
+    }
+    100% { 
+      transform: scale(1);
+    }
+  }
+  
+  /* Utility classes for animations */
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+  
+  .animate-hover {
+    transition: transform 0.3s ease;
+  }
+  
+  .animate-hover:hover {
+    animation: cardHover 0.5s ease;
+  }
+  
+  .animate-button {
+    transition: all 0.3s ease;
+  }
+  
+  .animate-button:hover {
+    animation: buttonPulse 0.5s ease;
+  }
+  
+  .animate-slide-in {
+    animation: slideIn 0.7s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  /* Background animations */
+  body {
+    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: #333;
+  }
+  
+  /* Subtle background pattern */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.03;
+    background-image: 
+      linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: -1;
+  }
