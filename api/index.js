@@ -1,23 +1,5 @@
 // api/index.js
-import { join } from 'path';
-import { promises as fs } from 'fs';
-
-// Initialize data file
-const dataFile = join(process.cwd(), 'data', 'points.json');
-
-// Ensure data directory and file exist
-async function ensureDataFile() {
-  try {
-    await fs.mkdir(join(process.cwd(), 'data'), { recursive: true });
-    try {
-      await fs.access(dataFile);
-    } catch {
-      await fs.writeFile(dataFile, JSON.stringify({ points: [] }));
-    }
-  } catch (error) {
-    console.error('Error initializing data file:', error);
-  }
-}
+import { put, get } from '@vercel/blob';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -31,19 +13,35 @@ export default async function handler(req, res) {
     return;
   }
 
-  await ensureDataFile();
+  const BLOB_KEY = 'points.json';
 
   try {
     if (req.method === 'GET') {
-      const data = await fs.readFile(dataFile, 'utf8');
-      res.json(JSON.parse(data));
+      try {
+        const blob = await get(BLOB_KEY);
+        const data = await blob.text();
+        res.json(JSON.parse(data));
+      } catch (error) {
+        // If no blob exists, return empty points
+        res.json({ points: [] });
+      }
     }
     else if (req.method === 'POST') {
       const { name, points } = req.body;
-      const data = JSON.parse(await fs.readFile(dataFile, 'utf8'));
       
+      // Retrieve existing data
+      let data;
+      try {
+        const existingBlob = await get(BLOB_KEY);
+        data = JSON.parse(await existingBlob.text());
+      } catch {
+        data = { points: [] };
+      }
+      
+      // Remove existing points for this name
       data.points = data.points.filter(p => p.name !== name);
       
+      // Add new points
       Object.entries(points).forEach(([pointType, count]) => {
         data.points.push({
           name,
@@ -52,11 +50,20 @@ export default async function handler(req, res) {
         });
       });
       
-      await fs.writeFile(dataFile, JSON.stringify(data, null, 2));
+      // Store updated data
+      await put(BLOB_KEY, JSON.stringify(data, null, 2), {
+        access: 'public',
+        contentType: 'application/json'
+      });
+      
       res.json({ success: true });
     }
     else if (req.method === 'DELETE') {
-      await fs.writeFile(dataFile, JSON.stringify({ points: [] }));
+      // Clear all points
+      await put(BLOB_KEY, JSON.stringify({ points: [] }, null, 2), {
+        access: 'public',
+        contentType: 'application/json'
+      });
       res.json({ success: true });
     }
     else {
@@ -64,6 +71,9 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('API Error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ 
+      error: 'Internal server error', 
+      details: error.message 
+    });
   }
 }
