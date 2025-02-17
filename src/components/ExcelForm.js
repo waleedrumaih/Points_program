@@ -83,24 +83,45 @@ const ExcelForm = () => {
     try {
       setIsLoading(true);
       
-      // Update the fetch path to use the correct path for public files
+      // Add more verbose logging
+      console.log('Attempting to fetch Excel file');
+      
       const response = await fetch('/names.xlsx');
       
+      console.log('Fetch response:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      
       if (!response.ok) {
+        const text = await response.text();
+        console.error('Response text:', text);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const blob = await response.blob();
+      
+      console.log('Blob details:', {
+        type: blob.type,
+        size: blob.size
+      });
+      
       const arrayBuffer = await blob.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
+      
+      console.log('Worksheet data:', worksheet);
+      
       const data = XLSX.utils.sheet_to_json(worksheet, { 
         header: 'A',
         raw: false,
         defval: ''
       });
+      
+      console.log('Processed data:', data);
       
       const { sortedGroupedNames, sortedGroups } = processExcelData(data);
       
@@ -112,7 +133,7 @@ const ExcelForm = () => {
       setGroups(sortedGroups);
       setError('');
     } catch (error) {
-      console.error('Error loading Excel data:', error);
+      console.error('Detailed Error:', error);
       setError(`Failed to load contact data: ${error.message}`);
     } finally {
       setIsLoading(false);
