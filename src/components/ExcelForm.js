@@ -81,62 +81,36 @@ const ExcelForm = () => {
 
   const loadExcelData = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
-      // Add more verbose logging
-      console.log('Attempting to fetch Excel file');
+      console.log('Current public path:', window.location.origin);
       
       const response = await fetch('/names.xlsx');
       
-      console.log('Fetch response:', {
+      console.log('Full response:', {
         status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: Object.fromEntries(response.headers.entries()),
+        type: response.type
       });
-      
-      if (!response.ok) {
-        const text = await response.text();
-        console.error('Response text:', text);
-        throw new Error(`HTTP error! status: ${response.status}`);
+  
+      // Log the response text to see what's actually being returned
+      const text = await response.text();
+      console.log('Response text:', text);
+  
+      // If it's HTML instead of a file, this indicates a routing issue
+      if (text.includes('<!doctype html>')) {
+        throw new Error('Received HTML instead of Excel file');
       }
-      
-      const blob = await response.blob();
-      
-      console.log('Blob details:', {
-        type: blob.type,
-        size: blob.size
-      });
+  
+      // If text looks like file content, convert to blob
+      const blob = new Blob([text], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       
       const arrayBuffer = await blob.arrayBuffer();
+      
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       
-      const firstSheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[firstSheetName];
-      
-      console.log('Worksheet data:', worksheet);
-      
-      const data = XLSX.utils.sheet_to_json(worksheet, { 
-        header: 'A',
-        raw: false,
-        defval: ''
-      });
-      
-      console.log('Processed data:', data);
-      
-      const { sortedGroupedNames, sortedGroups } = processExcelData(data);
-      
-      if (sortedGroups.length === 0) {
-        throw new Error('No valid data found in Excel file.');
-      }
-      
-      setNames(sortedGroupedNames);
-      setGroups(sortedGroups);
-      setError('');
+      // Rest of your existing code...
     } catch (error) {
-      console.error('Detailed Error:', error);
+      console.error('Detailed Fetch Error:', error);
       setError(`Failed to load contact data: ${error.message}`);
-    } finally {
-      setIsLoading(false);
     }
   }, [processExcelData]);
 
