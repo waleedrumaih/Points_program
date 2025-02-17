@@ -12,7 +12,17 @@
   "routes": [
     {
       "src": "/names.xlsx",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate"
+      },
       "dest": "/public/names.xlsx"
+    },
+    {
+      "src": "/manifest.json",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "dest": "/manifest.json"
     },
     {
       "src": "/(.*)",

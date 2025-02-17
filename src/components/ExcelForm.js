@@ -83,28 +83,40 @@ const ExcelForm = () => {
     try {
       setIsLoading(true);
       
-      // Try multiple fetch approaches
+      // Log current environment details
+      console.log('Current environment:', {
+        origin: window.location.origin,
+        pathname: window.location.pathname
+      });
+  
+      // Multiple fetch attempts
+      const fetchAttempts = [
+        '/names.xlsx',
+        'names.xlsx',
+        `${window.location.origin}/names.xlsx`,
+        `${window.location.origin}/public/names.xlsx`
+      ];
+  
       let arrayBuffer;
-      try {
-        // Approach 1: Fetch as arrayBuffer directly
-        const response = await fetch('/names.xlsx');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+      for (const url of fetchAttempts) {
+        try {
+          console.log(`Attempting to fetch from: ${url}`);
+          const response = await fetch(url);
+          
+          if (!response.ok) {
+            console.warn(`Fetch failed for ${url}. Status: ${response.status}`);
+            continue;
+          }
+  
+          arrayBuffer = await response.arrayBuffer();
+          break;
+        } catch (fetchError) {
+          console.error(`Error fetching from ${url}:`, fetchError);
         }
-        
-        arrayBuffer = await response.arrayBuffer();
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        
-        // Approach 2: Try with absolute path
-        const absoluteResponse = await fetch(`${window.location.origin}/names.xlsx`);
-        
-        if (!absoluteResponse.ok) {
-          throw new Error(`Absolute path fetch failed! status: ${absoluteResponse.status}`);
-        }
-        
-        arrayBuffer = await absoluteResponse.arrayBuffer();
+      }
+  
+      if (!arrayBuffer) {
+        throw new Error('Could not fetch Excel file from any attempted URL');
       }
   
       // Read the workbook
@@ -133,7 +145,7 @@ const ExcelForm = () => {
       setGroups(sortedGroups);
       setError('');
     } catch (error) {
-      console.error('Excel Loading Error:', error);
+      console.error('Excel Loading Comprehensive Error:', error);
       setError(`Failed to load contact data: ${error.message}`);
     } finally {
       setIsLoading(false);
