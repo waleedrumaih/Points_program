@@ -81,36 +81,62 @@ const ExcelForm = () => {
 
   const loadExcelData = useCallback(async () => {
     try {
-      console.log('Current public path:', window.location.origin);
+      setIsLoading(true);
       
-      const response = await fetch('/names.xlsx');
-      
-      console.log('Full response:', {
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        type: response.type
-      });
-  
-      // Log the response text to see what's actually being returned
-      const text = await response.text();
-      console.log('Response text:', text);
-  
-      // If it's HTML instead of a file, this indicates a routing issue
-      if (text.includes('<!doctype html>')) {
-        throw new Error('Received HTML instead of Excel file');
+      // Try multiple fetch approaches
+      let arrayBuffer;
+      try {
+        // Approach 1: Fetch as arrayBuffer directly
+        const response = await fetch('/names.xlsx');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        arrayBuffer = await response.arrayBuffer();
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        
+        // Approach 2: Try with absolute path
+        const absoluteResponse = await fetch(`${window.location.origin}/names.xlsx`);
+        
+        if (!absoluteResponse.ok) {
+          throw new Error(`Absolute path fetch failed! status: ${absoluteResponse.status}`);
+        }
+        
+        arrayBuffer = await absoluteResponse.arrayBuffer();
       }
   
-      // If text looks like file content, convert to blob
-      const blob = new Blob([text], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      
-      const arrayBuffer = await blob.arrayBuffer();
-      
+      // Read the workbook
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
       
-      // Rest of your existing code...
+      // Get the first sheet
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to JSON
+      const data = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 'A',
+        raw: false,
+        defval: ''
+      });
+      
+      console.log('Parsed Excel data:', data);
+      
+      const { sortedGroupedNames, sortedGroups } = processExcelData(data);
+      
+      if (sortedGroups.length === 0) {
+        throw new Error('No valid data found in Excel file.');
+      }
+      
+      setNames(sortedGroupedNames);
+      setGroups(sortedGroups);
+      setError('');
     } catch (error) {
-      console.error('Detailed Fetch Error:', error);
+      console.error('Excel Loading Error:', error);
       setError(`Failed to load contact data: ${error.message}`);
+    } finally {
+      setIsLoading(false);
     }
   }, [processExcelData]);
 
