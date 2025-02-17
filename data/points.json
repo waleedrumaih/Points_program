@@ -1,0 +1,39 @@
+{
+  "points": [
+    {
+      "name": "وليد الرميح",
+      "point_type": "بيت",
+      "point_count": 1
+    },
+    {
+      "name": "وليد الرميح",
+      "point_type": "مطعم",
+      "point_count": 1
+    },
+    {
+      "name": "وليد الرميح",
+      "point_type": "مكتبة",
+      "point_count": 1
+    },
+    {
+      "name": "وليد الرميح",
+      "point_type": "ملعب",
+      "point_count": 1
+    },
+    {
+      "name": "عمر الخشان",
+      "point_type": "بيت",
+      "point_count": 2
+    },
+    {
+      "name": "عمر الخشان",
+      "point_type": "ملعب",
+      "point_count": 1
+    },
+    {
+      "name": "عمر الخشان",
+      "point_type": "مكتبة",
+      "point_count": 1
+    }
+  ]
+}

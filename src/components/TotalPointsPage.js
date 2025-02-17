@@ -1,86 +1,75 @@
 // src/components/TotalPointsPage.js
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './TotalPointsPage.css';
 
 const TotalPointsPage = () => {
   const navigate = useNavigate();
-
-  const [namePoints, setNamePoints] = useState({});
   const [sortedNames, setSortedNames] = useState([]);
   const [editingName, setEditingName] = useState(null);
   const [editPoints, setEditPoints] = useState({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Use useMemo to memoize the neighborhood points
-  const neighborhoodPoints = useMemo(() => 
-    ['بيت', 'مسجد', 'ملعب', 'مطعم', 'مكتبة'], 
-    []
-  );
-
-  // Use useCallback to memoize the function
   const checkForNeighborhood = useCallback((points) => {
-    let neighborhoodCount = 0;
+    // Count how many types of points have values greater than 0
+    const differentPointTypes = Object.keys(points).filter(type => points[type] > 0);
 
-    // Check how many حي from houses
-    const houseCount = points['بيت'] || 0;
-    const houseNeighborhoods = Math.floor(houseCount / 4);
-    neighborhoodCount += houseNeighborhoods;
-
-    // Check for حي from different points
-    const uniquePoints = Object.keys(points).filter(point => 
-      neighborhoodPoints.includes(point) && point !== 'بيت' && points[point] > 0
-    );
-    
-    // Count حي from different point types
-    if (uniquePoints.length >= 3) {
-      // Find minimum count of these unique points
-      const minUniquePointCount = Math.min(
-        ...uniquePoints.map(point => points[point])
-      );
-      
-      // Add حي based on the minimum count of unique points
-      neighborhoodCount += Math.floor(minUniquePointCount / 2);
+    if (differentPointTypes.length >= 4) {
+      // Get the minimum count among all point types
+      const minPointCount = Math.min(...differentPointTypes.map(type => points[type]));
+      return minPointCount;
     }
 
-    return neighborhoodCount;
-  }, [neighborhoodPoints]);
+    return 0;
+  }, []);
 
-  useEffect(() => {
-    // Load points from localStorage
-    const savedPoints = localStorage.getItem('namePoints');
-    if (savedPoints) {
-      const parsedPoints = JSON.parse(savedPoints);
-      setNamePoints(parsedPoints);
+  const fetchPoints = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:8080/api/points');
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Data received:', data);
 
-      // Sort names by total points in descending order
-      const sorted = Object.entries(parsedPoints)
+      if (!data.points) {
+        console.log('No points in data:', data);
+        setSortedNames([]);
+        return;
+      }
+
+      const pointsByName = data.points.reduce((acc, point) => {
+        if (!acc[point.name]) {
+          acc[point.name] = {};
+        }
+        acc[point.name][point.point_type] = point.point_count;
+        return acc;
+      }, {});
+      
+      const sorted = Object.entries(pointsByName)
         .map(([name, points]) => {
           const total = Object.values(points).reduce((sum, count) => sum + count, 0);
-          
-          // Calculate number of neighborhoods
           const neighborhoodCount = checkForNeighborhood(points);
-
-          return {
-            name,
-            points,
-            total,
-            neighborhoodCount
-          };
+          return { name, points, total, neighborhoodCount };
         })
         .sort((a, b) => b.total - a.total);
 
       setSortedNames(sorted);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      alert('حدث خطأ أثناء تحميل النقاط');
+    } finally {
+      setIsLoading(false);
     }
   }, [checkForNeighborhood]);
 
-  const clearAllPoints = () => {
-    const confirmClear = window.confirm('هل أنت متأكد من مسح جميع النقاط؟');
-    if (confirmClear) {
-      localStorage.removeItem('namePoints');
-      setNamePoints({});
-      setSortedNames([]);
-    }
-  };
+  useEffect(() => {
+    fetchPoints();
+  }, [fetchPoints]);
 
   const startEditing = (name, points) => {
     setEditingName(name);
@@ -91,47 +80,67 @@ const TotalPointsPage = () => {
     const numValue = parseInt(value, 10) || 0;
     setEditPoints(prev => ({
       ...prev,
-      [point]: numValue
+      [point]: Math.max(0, numValue)
     }));
   };
 
-  const savePointChanges = () => {
-    const updatedNamePoints = {...namePoints};
-    updatedNamePoints[editingName] = editPoints;
-    
-    // Save to localStorage
-    localStorage.setItem('namePoints', JSON.stringify(updatedNamePoints));
-    
-    // Update state
-    setNamePoints(updatedNamePoints);
-    
-    // Refresh sorted names
-    const sorted = Object.entries(updatedNamePoints)
-      .map(([name, points]) => {
-        const total = Object.values(points).reduce((sum, count) => sum + count, 0);
-        const neighborhoodCount = checkForNeighborhood(points);
+  const savePointChanges = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/points', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingName,
+          points: editPoints
+        }),
+      });
 
-        return {
-          name,
-          points,
-          total,
-          neighborhoodCount
-        };
-      })
-      .sort((a, b) => b.total - a.total);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    setSortedNames(sorted);
-    
-    // Exit editing mode
-    setEditingName(null);
+      await fetchPoints();
+      setEditingName(null);
+    } catch (error) {
+      console.error('Error saving points:', error);
+      alert('حدث خطأ أثناء حفظ النقاط');
+    }
   };
+
+  const clearAllPoints = async () => {
+    const confirmClear = window.confirm('هل أنت متأكد من مسح جميع النقاط؟');
+    if (confirmClear) {
+      try {
+        const response = await fetch('/api/points', {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        await fetchPoints();
+      } catch (error) {
+        console.error('Error clearing points:', error);
+        alert('حدث خطأ أثناء مسح النقاط');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>جاري تحميل النقاط...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
-      <button 
-        className="back-button" 
-        onClick={() => navigate('/')}
-      >
+      <button className="back-button" onClick={() => navigate('/')}>
         <span className="back-button-icon">→</span>
         العودة
       </button>
@@ -140,10 +149,7 @@ const TotalPointsPage = () => {
         <div className="points-header">
           <h1>مجموع النقاط</h1>
           {sortedNames.length > 0 && (
-            <button 
-              onClick={clearAllPoints} 
-              className="clear-points-btn"
-            >
+            <button onClick={clearAllPoints} className="clear-points-btn">
               مسح جميع النقاط
             </button>
           )}

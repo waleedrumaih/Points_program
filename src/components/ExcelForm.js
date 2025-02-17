@@ -1,8 +1,11 @@
 // src/components/ExcelForm.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import './ExcelForm.css';
+import { calculateNeighborhoods } from '../utils/pointsCalculations';
+
+const API_URL = 'http://localhost:8080';
 
 const ExcelForm = () => {
   const navigate = useNavigate();
@@ -13,114 +16,180 @@ const ExcelForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [submitStatus, setSubmitStatus] = useState('');
+  const [statusType, setStatusType] = useState('');
+
+  const fetchExistingPoints = useCallback(async () => {
+    const response = await fetch(`/api/points`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }, []);
+
+  const savePoints = useCallback(async (name, points) => {
+    const response = await fetch(`${API_URL}/api/points`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, points })
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  }, []);
+
+  const processExcelData = useCallback((data) => {
+    const processedData = data.slice(1).map(row => ({
+      name: row.A,
+      group: row.C || 'Ungrouped'
+    }));
+    
+    const groupedNames = {};
+    const uniqueGroups = new Set();
+    
+    processedData.forEach(row => {
+      if (row.name) {
+        if (!groupedNames[row.group]) {
+          groupedNames[row.group] = [];
+        }
+        groupedNames[row.group].push(row.name);
+        uniqueGroups.add(row.group);
+      }
+    });
+    
+    const sortedGroups = Array.from(uniqueGroups).sort();
+    const sortedGroupedNames = {};
+    
+    sortedGroups.forEach(group => {
+      sortedGroupedNames[group] = groupedNames[group].sort();
+    });
+
+    return { sortedGroupedNames, sortedGroups };
+  }, []);
+
+  const loadExcelData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/names.xlsx');
+      const blob = await response.blob();
+      const arrayBuffer = await blob.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet, { 
+        header: 'A',
+        raw: false,
+        defval: ''
+      });
+      
+      const { sortedGroupedNames, sortedGroups } = processExcelData(data);
+      
+      if (sortedGroups.length === 0) {
+        throw new Error('No valid data found in Excel file.');
+      }
+      
+      setNames(sortedGroupedNames);
+      setGroups(sortedGroups);
+      setError('');
+    } catch (error) {
+      console.error('Error loading Excel data:', error);
+      setError('Failed to load contact data. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [processExcelData]);
 
   useEffect(() => {
-    const loadExcelData = async () => {
-      try {
-        const response = await fetch('/names.xlsx');
-        const blob = await response.blob();
-        const arrayBuffer = await new Response(blob).arrayBuffer();
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const data = XLSX.utils.sheet_to_json(worksheet, { 
-          header: 'A',
-          raw: false,
-          defval: ''
-        });
-        
-        const processedData = data.slice(1).map(row => ({
-          name: row.A,
-          group: row.C || 'Ungrouped'
-        }));
-        
-        const groupedNames = {};
-        const uniqueGroups = new Set();
-        
-        processedData.forEach(row => {
-          if (row.name) {
-            if (!groupedNames[row.group]) {
-              groupedNames[row.group] = [];
-            }
-            groupedNames[row.group].push(row.name);
-            uniqueGroups.add(row.group);
-          }
-        });
-        
-        if (Object.keys(groupedNames).length === 0) {
-          setError('No valid data found in Excel file.');
-          return;
-        }
-        
-        // Sort groups and names within groups
-        const sortedGroups = Array.from(uniqueGroups).sort();
-        const sortedGroupedNames = {};
-        sortedGroups.forEach(group => {
-          sortedGroupedNames[group] = groupedNames[group].sort();
-        });
-        
-        setNames(sortedGroupedNames);
-        setGroups(sortedGroups);
-        setError('');
-        
-      } catch (error) {
-        console.error('Error details:', error);
-        setError('Failed to load contact data. Please try again.');
-      }
-    };
-
     loadExcelData();
-  }, []);
+  }, [loadExcelData]);
 
   const handleGroupChange = (e) => {
     setSelectedGroup(e.target.value);
     setSelectedName('');
+    setSelectedOptions([]);
+    setSubmitStatus('');
   };
 
   const handleNameChange = (e) => {
     setSelectedName(e.target.value);
+    setSelectedOptions([]);
+    setSubmitStatus('');
   };
 
   const handleOptionToggle = (option) => {
+    setSubmitStatus('');
     setSelectedOptions(prev => {
       if (prev.includes(option)) {
         return prev.filter(item => item !== option);
-      } else {
-        return [...prev, option];
       }
+      return [...prev, option];
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Load existing points from localStorage
-    const savedPoints = JSON.parse(localStorage.getItem('namePoints') || '{}');
-    
-    // Add or update points for the selected name
-    if (!savedPoints[selectedName]) {
-      savedPoints[selectedName] = {};
+    if (!selectedName || selectedOptions.length === 0) {
+        return;
     }
-    
-    // Add points for each selected option
-    selectedOptions.forEach(option => {
-      savedPoints[selectedName][option] = 
-        (savedPoints[selectedName][option] || 0) + 1;
-    });
-    
-    // Save updated points to localStorage
-    localStorage.setItem('namePoints', JSON.stringify(savedPoints));
-    
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    alert(`تم التقديم بنجاح!\nالخيارات المختارة: ${selectedOptions.join(', ')}`);
-    
-    setSelectedName('');
-    setSelectedGroup('');
-    setSelectedOptions([]);
-    setIsSubmitting(false);
-  };
+
+    setIsSubmitting(true);
+    setError('');
+    setSubmitStatus('');
+
+    try {
+        const { points: existingPoints } = await fetchExistingPoints();
+        
+        let currentPoints = {};
+        existingPoints?.forEach(point => {
+            if (point.name === selectedName) {
+                currentPoints[point.point_type] = point.point_count;
+            }
+        });
+
+        selectedOptions.forEach(option => {
+            currentPoints[option] = (currentPoints[option] || 0) + 1;
+        });
+
+        await savePoints(selectedName, currentPoints);
+
+        const neighborhoodCount = calculateNeighborhoods(currentPoints);
+        const neighborhoodMessage = neighborhoodCount > 0 
+            ? ` وتم تشكيل ${neighborhoodCount} حي` 
+            : '';
+
+        setStatusType('success');
+        setSubmitStatus(`تم تحديث النقاط بنجاح لـ ${selectedName}. الخيارات المحددة: ${selectedOptions.join(', ')}${neighborhoodMessage}`);
+        
+        setTimeout(() => {
+            setSelectedName('');
+            setSelectedGroup('');
+            setSelectedOptions([]);
+            setSubmitStatus('');
+        }, 3000);
+
+    } catch (error) {
+        console.error('Error saving points:', error);
+        setStatusType('error');
+        setSubmitStatus('حدث خطأ أثناء حفظ النقاط. الرجاء المحاولة مرة أخرى.');
+    } finally {
+        setIsSubmitting(false);
+    }
+};
+
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>جاري تحميل البيانات...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -186,41 +255,16 @@ const ExcelForm = () => {
           <div className="form-group">
             <label>اختر الخيارات</label>
             <div className="button-group">
-              <button
-                type="button"
-                className={`toggle-button ${selectedOptions.includes('بيت') ? 'active' : ''}`}
-                onClick={() => handleOptionToggle('بيت')}
-              >
-                بيت
-              </button>
-              <button
-                type="button"
-                className={`toggle-button ${selectedOptions.includes('مسجد') ? 'active' : ''}`}
-                onClick={() => handleOptionToggle('مسجد')}
-              >
-                مسجد
-              </button>
-              <button
-                type="button"
-                className={`toggle-button ${selectedOptions.includes('ملعب') ? 'active' : ''}`}
-                onClick={() => handleOptionToggle('ملعب')}
-              >
-                ملعب
-              </button>
-              <button
-                type="button"
-                className={`toggle-button ${selectedOptions.includes('مطعم') ? 'active' : ''}`}
-                onClick={() => handleOptionToggle('مطعم')}
-              >
-                مطعم
-              </button>
-              <button
-                type="button"
-                className={`toggle-button ${selectedOptions.includes('مكتبة') ? 'active' : ''}`}
-                onClick={() => handleOptionToggle('مكتبة')}
-              >
-                مكتبة
-              </button>
+              {['بيت', 'مسجد', 'ملعب', 'مطعم', 'مكتبة'].map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  className={`toggle-button ${selectedOptions.includes(option) ? 'active' : ''}`}
+                  onClick={() => handleOptionToggle(option)}
+                >
+                  {option}
+                </button>
+              ))}
             </div>
             {selectedOptions.length > 0 && (
               <div className="selected-options">
@@ -237,6 +281,15 @@ const ExcelForm = () => {
             <span>{isSubmitting ? 'جاري المعالجة...' : 'إضافة النقاط'}</span>
           </button>
         </form>
+
+        {submitStatus && (
+          <div className={`status-message ${statusType}`}>
+            <span className="status-icon">
+              {statusType === 'success' ? '✓' : '⚠️'}
+            </span>
+            <p>{submitStatus}</p>
+          </div>
+        )}
       </div>
     </div>
   );
