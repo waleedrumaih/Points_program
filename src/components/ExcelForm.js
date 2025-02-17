@@ -83,35 +83,40 @@ const ExcelForm = () => {
     try {
       setIsLoading(true);
       
-      // Log current environment details
-      console.log('Current environment:', {
+      // Comprehensive logging
+      console.log('Environment Details:', {
         origin: window.location.origin,
         pathname: window.location.pathname
       });
   
-      // Multiple fetch attempts
-      const fetchAttempts = [
-        '/names.xlsx',
-        'names.xlsx',
-        `${window.location.origin}/names.xlsx`,
-        `${window.location.origin}/public/names.xlsx`
+      // Attempt multiple fetch strategies
+      const fetchStrategies = [
+        () => fetch('/names.xlsx'),
+        () => fetch('names.xlsx'),
+        () => fetch(`${window.location.origin}/names.xlsx`),
+        () => fetch(`${window.location.origin}/public/names.xlsx`)
       ];
   
       let arrayBuffer;
-      for (const url of fetchAttempts) {
+      for (const fetchStrategy of fetchStrategies) {
         try {
-          console.log(`Attempting to fetch from: ${url}`);
-          const response = await fetch(url);
+          const response = await fetchStrategy();
           
+          console.log('Fetch Response:', {
+            url: response.url,
+            status: response.status,
+            statusText: response.statusText
+          });
+  
           if (!response.ok) {
-            console.warn(`Fetch failed for ${url}. Status: ${response.status}`);
+            console.warn(`Fetch failed. Status: ${response.status}`);
             continue;
           }
   
           arrayBuffer = await response.arrayBuffer();
           break;
         } catch (fetchError) {
-          console.error(`Error fetching from ${url}:`, fetchError);
+          console.error('Fetch Error:', fetchError);
         }
       }
   
@@ -119,21 +124,18 @@ const ExcelForm = () => {
         throw new Error('Could not fetch Excel file from any attempted URL');
       }
   
-      // Read the workbook
+      // Read and process Excel file
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      
-      // Get the first sheet
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       
-      // Convert to JSON
       const data = XLSX.utils.sheet_to_json(worksheet, { 
         header: 'A',
         raw: false,
         defval: ''
       });
       
-      console.log('Parsed Excel data:', data);
+      console.log('Parsed Excel Data:', data);
       
       const { sortedGroupedNames, sortedGroups } = processExcelData(data);
       
@@ -145,7 +147,7 @@ const ExcelForm = () => {
       setGroups(sortedGroups);
       setError('');
     } catch (error) {
-      console.error('Excel Loading Comprehensive Error:', error);
+      console.error('Comprehensive Excel Loading Error:', error);
       setError(`Failed to load contact data: ${error.message}`);
     } finally {
       setIsLoading(false);
