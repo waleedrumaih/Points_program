@@ -26,7 +26,7 @@ const TotalPointsPage = () => {
   const fetchPoints = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('http://localhost:8080/api/points');
+      const response = await fetch('/api/points');
       console.log('Response status:', response.status);
       
       if (!response.ok) {
@@ -86,7 +86,7 @@ const TotalPointsPage = () => {
 
   const savePointChanges = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/points', {
+      const response = await fetch('/api/points', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -29,7 +29,7 @@ const ExcelForm = () => {
   }, []);
 
   const savePoints = useCallback(async (name, points) => {
-    const response = await fetch(`${API_URL}/api/points`, {
+    const response = await fetch(`/api/points`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
