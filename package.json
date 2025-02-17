@@ -10,10 +10,11 @@
     "@vercel/blob": "^0.27.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "lodash": "^4.17.21",
     "lucide-react": "^0.294.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.29.0",
     "react-scripts": "5.0.1",
     "web-vitals": "^3.5.0",
     "xlsx": "^0.18.5"
@@ -41,5 +42,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18"
   }
 }
