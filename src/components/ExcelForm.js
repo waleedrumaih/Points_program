@@ -1,11 +1,8 @@
-// src/components/ExcelForm.js
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import './ExcelForm.css';
 import { calculateNeighborhoods } from '../utils/pointsCalculations';
-
-const API_URL = 'http://localhost:8080';
 
 const ExcelForm = () => {
   const navigate = useNavigate();
@@ -21,26 +18,36 @@ const ExcelForm = () => {
   const [statusType, setStatusType] = useState('');
 
   const fetchExistingPoints = useCallback(async () => {
-    const response = await fetch(`/api/points`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      const response = await fetch(`/api/points`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error fetching existing points:', error);
+      return { points: [] };
     }
-    return response.json();
   }, []);
 
   const savePoints = useCallback(async (name, points) => {
-    const response = await fetch(`/api/points`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, points })
-    });
+    try {
+      const response = await fetch(`/api/points`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, points })
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Error saving points:', error);
+      throw error;
     }
-    return response.json();
   }, []);
 
   const processExcelData = useCallback((data) => {
@@ -75,7 +82,14 @@ const ExcelForm = () => {
   const loadExcelData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/public/names.xlsx');
+      
+      // Update the fetch path to use the correct path for public files
+      const response = await fetch('/names.xlsx');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const blob = await response.blob();
       const arrayBuffer = await blob.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -99,7 +113,7 @@ const ExcelForm = () => {
       setError('');
     } catch (error) {
       console.error('Error loading Excel data:', error);
-      setError('Failed to load contact data. Please try again.');
+      setError(`Failed to load contact data: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +194,7 @@ const ExcelForm = () => {
     } finally {
         setIsSubmitting(false);
     }
-};
+  };
 
   if (isLoading) {
     return (

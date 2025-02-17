@@ -1,8 +1,7 @@
-// api/index.js
 import { put, get } from '@vercel/blob';
 
 export default async function handler(req, res) {
-  // Set CORS headers
+  // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
@@ -13,17 +12,17 @@ export default async function handler(req, res) {
     return;
   }
 
-  const BLOB_KEY = 'points.json';
+  const POINTS_KEY = 'points.json';
 
   try {
     if (req.method === 'GET') {
       try {
-        const blob = await get(BLOB_KEY);
+        const blob = await get(POINTS_KEY);
         const data = await blob.text();
-        res.json(JSON.parse(data));
+        res.status(200).json(JSON.parse(data));
       } catch (error) {
-        // If no blob exists, return empty points
-        res.json({ points: [] });
+        console.error('Error fetching points:', error);
+        res.status(200).json({ points: [] });
       }
     }
     else if (req.method === 'POST') {
@@ -32,7 +31,7 @@ export default async function handler(req, res) {
       // Retrieve existing data
       let data;
       try {
-        const existingBlob = await get(BLOB_KEY);
+        const existingBlob = await get(POINTS_KEY);
         data = JSON.parse(await existingBlob.text());
       } catch {
         data = { points: [] };
@@ -51,20 +50,20 @@ export default async function handler(req, res) {
       });
       
       // Store updated data
-      await put(BLOB_KEY, JSON.stringify(data, null, 2), {
+      await put(POINTS_KEY, JSON.stringify(data, null, 2), {
         access: 'public',
         contentType: 'application/json'
       });
       
-      res.json({ success: true });
+      res.status(200).json({ success: true });
     }
     else if (req.method === 'DELETE') {
       // Clear all points
-      await put(BLOB_KEY, JSON.stringify({ points: [] }, null, 2), {
+      await put(POINTS_KEY, JSON.stringify({ points: [] }, null, 2), {
         access: 'public',
         contentType: 'application/json'
       });
-      res.json({ success: true });
+      res.status(200).json({ success: true });
     }
     else {
       res.status(405).json({ error: 'Method not allowed' });
