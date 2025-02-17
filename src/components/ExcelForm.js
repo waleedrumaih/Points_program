@@ -75,7 +75,7 @@ const ExcelForm = () => {
   const loadExcelData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/names.xlsx');
+      const response = await fetch('/public/names.xlsx');
       const blob = await response.blob();
       const arrayBuffer = await blob.arrayBuffer();
       const workbook = XLSX.read(arrayBuffer, { type: 'array' });
